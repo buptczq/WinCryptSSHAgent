@@ -23,7 +23,7 @@ type CAPIAgent struct {
 	keys []*sshKey
 }
 
-func (s *CAPIAgent) free() (err error) {
+func (s *CAPIAgent) close() (err error) {
 	for _, key := range s.keys {
 		err = key.cert.Free()
 	}
@@ -31,11 +31,11 @@ func (s *CAPIAgent) free() (err error) {
 	return
 }
 
-func (s *CAPIAgent) Free() (err error) {
+func (s *CAPIAgent) Close() (err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.free()
+	return s.close()
 }
 
 func (s *CAPIAgent) loadCerts() (err error) {
@@ -83,7 +83,7 @@ func (s *CAPIAgent) List() (keys []*agent.Key, err error) {
 	defer s.mu.Unlock()
 
 	if s.keys != nil {
-		s.free()
+		s.close()
 	}
 	err = s.loadCerts()
 	if err != nil {

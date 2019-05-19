@@ -1,18 +1,22 @@
-package main
+package app
 
 import (
 	"context"
 	"fmt"
+	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"io"
 	"net"
 	"os"
 	"path/filepath"
-	"github.com/buptczq/WinCryptSSHAgent/common"
-	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"strings"
 	"sync"
 	"time"
 )
+
+type WSL struct {
+	running bool
+	help    string
+}
 
 func listenUnixSock(filename string) (string, net.Listener, error) {
 	path, err := filepath.Abs(filename)
@@ -35,10 +39,10 @@ func winPath2Unix(path string) string {
 	}
 }
 
-func wslServer(ctx context.Context, handler func(conn io.ReadWriteCloser)) error {
+func (s *WSL) Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) error {
 	fallback := false
 	// try to listen unix sock (Win10 1803)
-	path, l, err := listenUnixSock(common.WSL_SOCK)
+	path, l, err := listenUnixSock(WSL_SOCK)
 	if err != nil {
 		// fallback to raw tcp
 		l, err = net.Listen("tcp", "localhost:0")
@@ -48,19 +52,14 @@ func wslServer(ctx context.Context, handler func(conn io.ReadWriteCloser)) error
 		}
 	}
 	defer l.Close()
-	status := ctx.Value("status").(*common.Services)
-	status.Lock()
-	s := &common.ServiceStatus{
-		Running: true,
-	}
-	status.Service[common.APP_WSL] = s
+
+	s.running = true
 	if !fallback {
-		s.Help = fmt.Sprintf("export SSH_AUTH_SOCK=" + winPath2Unix(path))
+		s.help = fmt.Sprintf("export SSH_AUTH_SOCK=" + winPath2Unix(path))
 	} else {
-		s.Help = fmt.Sprintf("socat -d UNIX-LISTEN:/tmp/ssh-capi-agent.sock,reuseaddr,fork TCP:localhost:%d &\n", l.Addr().(*net.TCPAddr).Port)
-		s.Help += "export SSH_AUTH_SOCK=/tmp/ssh-capi-agent.sock"
+		s.help = fmt.Sprintf("socat -d UNIX-LISTEN:/tmp/ssh-capi-agent.sock,reuseaddr,fork TCP:localhost:%d &\n", l.Addr().(*net.TCPAddr).Port)
+		s.help += "export SSH_AUTH_SOCK=/tmp/ssh-capi-agent.sock"
 	}
-	status.Unlock()
 	// loop
 	wg := new(sync.WaitGroup)
 	for {
@@ -83,5 +82,23 @@ func wslServer(ctx context.Context, handler func(conn io.ReadWriteCloser)) error
 			handler(conn)
 			wg.Done()
 		}()
+	}
+}
+
+func (*WSL) AppId() AppId {
+	return APP_WSL
+}
+
+func (s *WSL) Menu(register func(id AppId, name string, handler func())) {
+	register(s.AppId(), s.AppId().String()+" Help", s.onClick)
+}
+
+func (s *WSL) onClick() {
+	if s.running {
+		if utils.MessageBox(s.AppId().FullName()+" (OK to copy):", s.help, utils.MB_OKCANCEL) == utils.IDOK {
+			utils.SetClipBoard(s.help)
+		}
+	} else {
+		utils.MessageBox("Error:", s.AppId().String()+" agent doesn't work!", utils.MB_ICONWARNING)
 	}
 }

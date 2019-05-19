@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"bytes"
@@ -10,12 +10,16 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"github.com/buptczq/WinCryptSSHAgent/common"
 	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"sync"
 	"syscall"
 	"time"
 )
+
+type Cygwin struct {
+	running bool
+	sockfile string
+}
 
 func createCygwinSocket(filename string, port int) ([]byte, error) {
 	os.Remove(filename)
@@ -61,11 +65,13 @@ func cygwinHandshake(conn net.Conn, uuid []byte) error {
 	return nil
 }
 
-func cygwinSocketServer(ctx context.Context, handler func(conn io.ReadWriteCloser)) error {
-	sockfile, err := filepath.Abs(common.CYGWIN_SOCK)
+
+func (s *Cygwin)Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) error {
+	sockfile, err := filepath.Abs(CYGWIN_SOCK)
 	if err != nil {
 		return err
 	}
+	s.sockfile = sockfile
 	// listen tcp socket
 	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
@@ -81,13 +87,7 @@ func cygwinSocketServer(ctx context.Context, handler func(conn io.ReadWriteClose
 	if err != nil {
 		return err
 	}
-	status := ctx.Value("status").(*common.Services)
-	status.Lock()
-	status.Service[common.APP_CYGWIN] = &common.ServiceStatus{
-		Running: true,
-		Help:    fmt.Sprintf(`export SSH_AUTH_SOCK="%s"`, sockfile),
-	}
-	status.Unlock()
+	s.running = true
 	// loop
 	wg := new(sync.WaitGroup)
 	for {
@@ -115,5 +115,24 @@ func cygwinSocketServer(ctx context.Context, handler func(conn io.ReadWriteClose
 			handler(conn)
 			wg.Done()
 		}()
+	}
+}
+
+func (*Cygwin)AppId() AppId {
+	return APP_CYGWIN
+}
+
+func (s *Cygwin)Menu(register func(id AppId, name string, handler func())){
+	register(s.AppId(), s.AppId().String() + " Help", s.onClick)
+}
+
+func (s *Cygwin)onClick()  {
+	if s.running {
+		help := fmt.Sprintf(`export SSH_AUTH_SOCK="%s"`, s.sockfile)
+		if utils.MessageBox(s.AppId().FullName()+" (OK to copy):", help, utils.MB_OKCANCEL) == utils.IDOK {
+			utils.SetClipBoard(help)
+		}
+	} else {
+		utils.MessageBox("Error:", s.AppId().String()+" agent doesn't work!", utils.MB_ICONWARNING)
 	}
 }

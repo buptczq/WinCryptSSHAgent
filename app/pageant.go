@@ -1,13 +1,15 @@
-package main
+package app
 
 import (
 	"context"
-	"io"
 	"github.com/buptczq/WinCryptSSHAgent/utils"
+	"io"
 	"sync"
 )
 
-func pageantServer(ctx context.Context, handler func(conn io.ReadWriteCloser)) error {
+type Pageant struct{}
+
+func (*Pageant) Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) error {
 	win, err := utils.NewPageant()
 	if err != nil {
 		return err
@@ -29,4 +31,11 @@ func pageantServer(ctx context.Context, handler func(conn io.ReadWriteCloser)) e
 			wg.Done()
 		}()
 	}
+}
+
+func (*Pageant) AppId() AppId {
+	return APP_PAGEANT
+}
+
+func (s *Pageant) Menu(register func(id AppId, name string, handler func())) {
 }
