@@ -27,7 +27,7 @@ With the support of these protocols, this project is compatible with most SSH cl
 
 * Git for Windows
 * Windows Subsystem for Linux
-* Window OpenSSH
+* Windows OpenSSH
 * Putty
 * Jetbrains
 * SecureCRT
@@ -56,8 +56,19 @@ Note: Some SSH clients using Pageant Protocol, e.g., Putty, XShell and Jetbrains
 
 OpenSSH supports authentication using SSH certificates. Certificates contain a public key, identity information and are signed with a standard SSH key.
 
-Unlike TLS using X.509, OpenSSH is using a special certificate format, thus we can't convert your X.509 certificate into OpenSSH format.
+Unlike TLS using X.509, OpenSSH uses a special certificate format, thus we can't convert your X.509 certificate into OpenSSH format.
 
 To deal with OpenSSH Certificates, this project introduces a public key override mechanism.
 
 If you want to work with OpenSSH certificates, you should put your OpenSSH Certificates in the same folder of this application, rename them to `<Your Certificate Common Name>-cert.pub` or `<Your Certificate Serial Number>-cert.pub`.
+
+### Contribute
+
+**Please use issues for everything**
+
+- For a small change, just send a PR.
+- For bigger changes open an issue for discussion before sending a PR.
+- You can also contribute by:
+  - Reporting issues
+  - Suggesting new features or enhancements
+  - Improve/fix documentation
