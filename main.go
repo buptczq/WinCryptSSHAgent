@@ -4,15 +4,15 @@ package main
 
 import (
 	"context"
+	"github.com/buptczq/WinCryptSSHAgent/app"
+	"github.com/buptczq/WinCryptSSHAgent/sshagent"
+	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"github.com/hattya/go.notify"
 	notification "github.com/hattya/go.notify/windows"
 	"os"
 	"os/signal"
-	"github.com/buptczq/WinCryptSSHAgent/sshagent"
-	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"sync"
 	"time"
-	"github.com/buptczq/WinCryptSSHAgent/app"
 )
 
 var applications = []app.Application{
@@ -104,7 +104,9 @@ func initSystray() (notify.Notifier, error) {
 	if err != nil {
 		return nil, err
 	}
-	n.Register("info", notification.IconInfo, nil)
+	n.Register("info", notification.IconInfo, map[string]interface{}{
+		"windows:sound": false,
+	})
 	utils.RegisterNotifier(n)
 	return n, nil
 }
