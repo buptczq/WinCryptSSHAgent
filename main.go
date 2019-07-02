@@ -16,6 +16,7 @@ import (
 )
 
 var applications = []app.Application{
+	new(app.PubKeyView),
 	new(app.WSL),
 	new(app.Cygwin),
 	new(app.NamedPipe),
@@ -38,6 +39,7 @@ func main() {
 	// agent
 	ag := new(sshagent.CAPIAgent)
 	defer ag.Close()
+	ctx = context.WithValue(ctx, "agent", ag)
 	server := &sshagent.Server{ag}
 
 	// application
