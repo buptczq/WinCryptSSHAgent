@@ -38,6 +38,14 @@ With the support of these protocols, this project is compatible with most SSH cl
 
 ## Installing
 
+### Install with Chocolatey
+
+```
+choco install wincrypt-sshagent
+```
+
+### Manually Install
+
 Stable versions can be obtained from the release page. 
 
 Additionally, you may make an shortcut of this application to the startup folder.
