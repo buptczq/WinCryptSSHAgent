@@ -5,10 +5,10 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/agent"
 	"github.com/buptczq/WinCryptSSHAgent/capi"
 	"github.com/buptczq/WinCryptSSHAgent/utils"
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 	"sync"
 )
 
@@ -46,6 +46,10 @@ func (s *CAPIAgent) loadCerts() (err error) {
 	s.keys = make([]*sshKey, 0, len(certs))
 
 	for _, cert := range certs {
+		if !FilterCertificateEKU(cert) {
+			cert.Free()
+			continue
+		}
 		pub, err := ssh.NewPublicKey(cert.PublicKey)
 		if err != nil {
 			cert.Free()
