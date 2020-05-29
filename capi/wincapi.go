@@ -21,9 +21,10 @@ const (
 )
 
 var (
-	modcrypt32                          = syscall.NewLazyDLL("crypt32.dll")
-	procCryptSignMessage                = modcrypt32.NewProc("CryptSignMessage")
-	procCertDuplicateCertificateContext = modcrypt32.NewProc("CertDuplicateCertificateContext")
+	modcrypt32                            = syscall.NewLazyDLL("crypt32.dll")
+	procCryptSignMessage                  = modcrypt32.NewProc("CryptSignMessage")
+	procCertDuplicateCertificateContext   = modcrypt32.NewProc("CertDuplicateCertificateContext")
+	procCertGetCertificateContextProperty = modcrypt32.NewProc("CertGetCertificateContextProperty")
 )
 
 type cryptoapiBlob struct {
@@ -94,6 +95,15 @@ func certDuplicateCertificateContext(context *syscall.CertContext) (uintptr, err
 	return r0, nil
 }
 
+func certGetCertificateContextProperty(context *syscall.CertContext, dwPropId uint32) int {
+	pvData := uint32(0)
+	pvDataPtr := uintptr(unsafe.Pointer(&pvData))
+	pcbData := uint32(4)
+	pcbDataPtr := uintptr(unsafe.Pointer(&pcbData))
+	r0, _, _ := syscall.Syscall6(procCertGetCertificateContextProperty.Addr(), 4, uintptr(unsafe.Pointer(context)), uintptr(dwPropId), pvDataPtr, pcbDataPtr, 0, 0)
+	return int(r0)
+}
+
 type Certificate struct {
 	certContext uintptr
 	*x509.Certificate
@@ -121,6 +131,7 @@ func LoadUserCerts() ([]*Certificate, error) {
 		CERT_SYSTEM_STORE_CURRENT_USER = 0x00010000
 		CERT_STORE_READONLY_FLAG       = 0x00008000
 		CRYPT_E_NOT_FOUND              = 0x80092004
+		CERT_KEY_SPEC_PROP_ID          = 6
 	)
 	ptr, _ := syscall.BytePtrFromString("My")
 	store, err := syscall.CertOpenStore(
@@ -149,6 +160,11 @@ func LoadUserCerts() ([]*Certificate, error) {
 		}
 		if cert == nil {
 			break
+		}
+		// Check private key
+		propID := certGetCertificateContextProperty(cert, CERT_KEY_SPEC_PROP_ID)
+		if propID == 0 {
+			continue
 		}
 		// Copy the buf, since ParseCertificate does not create its own copy.
 		buf := (*[1 << 20]byte)(unsafe.Pointer(cert.EncodedCert))[:]
