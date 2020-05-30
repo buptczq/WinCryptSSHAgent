@@ -16,11 +16,14 @@ func FilterCertificateEKU(cert *capi.Certificate) bool {
 	flagAny := false
 	flagBitLocker := false
 	flagAuth := false
+	flagServerAuth := false
 	for i := range cert.ExtKeyUsage {
 		if cert.ExtKeyUsage[i] == x509.ExtKeyUsageAny {
 			flagAny = true
 		} else if cert.ExtKeyUsage[i] == x509.ExtKeyUsageClientAuth {
 			flagAuth = true
+		} else if cert.ExtKeyUsage[i] == x509.ExtKeyUsageServerAuth {
+			flagServerAuth = true
 		}
 	}
 	for i := range cert.UnknownExtKeyUsage {
@@ -35,7 +38,7 @@ func FilterCertificateEKU(cert *capi.Certificate) bool {
 	if flagAny || flagAuth {
 		return true
 	}
-	if flagBitLocker {
+	if flagBitLocker || flagServerAuth {
 		return false
 	}
 	return true
