@@ -21,6 +21,7 @@ var applications = []app.Application{
 	new(app.Cygwin),
 	new(app.NamedPipe),
 	new(app.Pageant),
+	new(app.VSock),
 }
 
 func main() {

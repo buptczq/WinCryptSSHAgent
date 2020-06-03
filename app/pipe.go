@@ -28,7 +28,6 @@ func (s *NamedPipe) Run(ctx context.Context, handler func(conn io.ReadWriteClose
 	go func() {
 		<-ctx.Done()
 		wg.Wait()
-		pipe.Close()
 	}()
 	// loop
 	for {
