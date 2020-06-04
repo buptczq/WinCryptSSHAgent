@@ -4,11 +4,10 @@ import (
 	"context"
 	"github.com/Microsoft/go-winio"
 	"github.com/Microsoft/go-winio/pkg/guid"
+	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"io"
 	"sync"
 )
-
-const servicePort = 0x22223333
 
 var (
 	vmWildCard, _ = guid.FromString("00000000-0000-0000-0000-000000000000")
@@ -24,7 +23,11 @@ type VSock struct {
 }
 
 func (s *VSock) Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) error {
-	agentSrvGUID := winio.VsockServiceID(servicePort)
+	isHV := ctx.Value("hv").(bool)
+	if isHV {
+		return nil
+	}
+	agentSrvGUID := winio.VsockServiceID(utils.ServicePort)
 	pipe, err := winio.ListenHvsock(&winio.HvsockAddr{
 		VMID:      vmWildCard,
 		ServiceID: agentSrvGUID,

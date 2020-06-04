@@ -9,6 +9,7 @@ import (
 	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"github.com/hattya/go.notify"
 	notification "github.com/hattya/go.notify/windows"
+	"golang.org/x/crypto/ssh/agent"
 	"os"
 	"os/signal"
 	"sync"
@@ -25,8 +26,16 @@ var applications = []app.Application{
 }
 
 func main() {
+	// hyper-v
+	hvClient := false
+	hvConn, err := utils.ConnectHyperV()
+	if err == nil {
+		defer hvConn.Close()
+		hvClient = true
+	}
+
 	// systray
-	notifier, err := initSystray()
+	notifier, err := initSystray(hvClient)
 	if err != nil {
 		utils.MessageBox("Error:", err.Error(), utils.MB_ICONERROR)
 		return
@@ -38,9 +47,16 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// agent
-	ag := new(sshagent.CAPIAgent)
-	defer ag.Close()
+	var ag agent.Agent
+	if hvClient {
+		ag = sshagent.NewHVAgent(hvConn)
+	} else {
+		cag := new(sshagent.CAPIAgent)
+		defer cag.Close()
+		ag = cag
+	}
 	ctx = context.WithValue(ctx, "agent", ag)
+	ctx = context.WithValue(ctx, "hv", hvClient)
 	server := &sshagent.Server{ag}
 
 	// application
@@ -98,12 +114,16 @@ cleanup:
 	}
 }
 
-func initSystray() (notify.Notifier, error) {
+func initSystray(hv bool) (notify.Notifier, error) {
 	icon, err := notification.LoadIcon(1)
 	if err != nil {
 		return nil, err
 	}
-	n, err := notification.NewNotifier("WinCrypt SSH Agent", icon)
+	title := "WinCrypt SSH Agent"
+	if hv {
+		title += " (Hyper-V)"
+	}
+	n, err := notification.NewNotifier(title, icon)
 	if err != nil {
 		return nil, err
 	}

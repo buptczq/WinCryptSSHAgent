@@ -7,6 +7,9 @@ github.com/godbus/dbus/v5 v5.0.3/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5x
 github.com/hattya/go.notify v0.0.0-20200507123844-18670158b53e h1:Gk1vp0SYbw9pEJdELjDDBaRuFzz0/iGi28lNjaM22RI=
 github.com/hattya/go.notify v0.0.0-20200507123844-18670158b53e/go.mod h1:mINwcH5dRqzDBn/Gp/Ss1ADDLUBI7ZVDJq5uW1FUF2I=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
+github.com/linuxkit/virtsock v0.0.0-20180830132707-8e79449dea07 h1:Txrn3UR5uEutnv3naHnt9nhDHWDUrK/NjtKs17hMTMw=
+github.com/linuxkit/virtsock v0.0.0-20180830132707-8e79449dea07/go.mod h1:3r6x7q95whyfWQpmGZTu3gk3v2YkMi05HEzl7Tf7YEo=
+github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/sirupsen/logrus v1.4.1/go.mod h1:ni0Sbl8bgC9z8RoU9G6nDWqqs/fq4eDPysMBDgk/93Q=
