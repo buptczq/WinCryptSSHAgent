@@ -51,9 +51,9 @@ func (*NamedPipe) AppId() AppId {
 }
 
 func (s *NamedPipe) Menu(register func(id AppId, name string, handler func())) {
-	register(s.AppId(), s.AppId().String()+" Help", s.onClick)
+	register(s.AppId(), "Show "+s.AppId().String()+" Settings", s.onClick)
 	app := AppId(APP_SECURECRT)
-	register(app, app.String()+" Help", s.onClickSC)
+	register(app, "Show "+app.String()+" Settings", s.onClickSC)
 }
 
 func (s *NamedPipe) onClick() {

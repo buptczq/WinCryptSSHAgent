@@ -6,18 +6,18 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"fmt"
+	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"io"
 	"net"
 	"os"
 	"path/filepath"
-	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"sync"
 	"syscall"
 	"time"
 )
 
 type Cygwin struct {
-	running bool
+	running  bool
 	sockfile string
 }
 
@@ -65,8 +65,7 @@ func cygwinHandshake(conn net.Conn, uuid []byte) error {
 	return nil
 }
 
-
-func (s *Cygwin)Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) error {
+func (s *Cygwin) Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) error {
 	sockfile, err := filepath.Abs(CYGWIN_SOCK)
 	if err != nil {
 		return err
@@ -118,15 +117,15 @@ func (s *Cygwin)Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) 
 	}
 }
 
-func (*Cygwin)AppId() AppId {
+func (*Cygwin) AppId() AppId {
 	return APP_CYGWIN
 }
 
-func (s *Cygwin)Menu(register func(id AppId, name string, handler func())){
-	register(s.AppId(), s.AppId().String() + " Help", s.onClick)
+func (s *Cygwin) Menu(register func(id AppId, name string, handler func())) {
+	register(s.AppId(), "Show "+s.AppId().String()+" Settings", s.onClick)
 }
 
-func (s *Cygwin)onClick()  {
+func (s *Cygwin) onClick() {
 	if s.running {
 		help := fmt.Sprintf(`export SSH_AUTH_SOCK="%s"`, s.sockfile)
 		if utils.MessageBox(s.AppId().FullName()+" (OK to copy):", help, utils.MB_OKCANCEL) == utils.IDOK {

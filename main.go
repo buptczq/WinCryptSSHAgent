@@ -19,10 +19,10 @@ import (
 var applications = []app.Application{
 	new(app.PubKeyView),
 	new(app.WSL),
+	new(app.VSock),
 	new(app.Cygwin),
 	new(app.NamedPipe),
 	new(app.Pageant),
-	new(app.VSock),
 }
 
 func main() {

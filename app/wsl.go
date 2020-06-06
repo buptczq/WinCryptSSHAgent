@@ -57,7 +57,7 @@ func (s *WSL) Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) er
 	if !fallback {
 		s.help = fmt.Sprintf("export SSH_AUTH_SOCK=" + winPath2Unix(path))
 	} else {
-		s.help = fmt.Sprintf("socat -d UNIX-LISTEN:/tmp/ssh-capi-agent.sock,reuseaddr,fork TCP:localhost:%d &\n", l.Addr().(*net.TCPAddr).Port)
+		s.help = fmt.Sprintf("socat UNIX-LISTEN:/tmp/ssh-capi-agent.sock,reuseaddr,fork TCP:localhost:%d &\n", l.Addr().(*net.TCPAddr).Port)
 		s.help += "export SSH_AUTH_SOCK=/tmp/ssh-capi-agent.sock"
 	}
 	// loop
@@ -90,7 +90,7 @@ func (*WSL) AppId() AppId {
 }
 
 func (s *WSL) Menu(register func(id AppId, name string, handler func())) {
-	register(s.AppId(), s.AppId().String()+" Help", s.onClick)
+	register(s.AppId(), "Show "+s.AppId().String()+" Settings", s.onClick)
 }
 
 func (s *WSL) onClick() {

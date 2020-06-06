@@ -2,14 +2,14 @@
     "FixedFileInfo": {
         "FileVersion": {
             "Major": 1,
-            "Minor": 0,
-            "Patch": 5,
+            "Minor": 1,
+            "Patch": 0,
             "Build": 0
         },
         "ProductVersion": {
             "Major": 1,
-            "Minor": 0,
-            "Patch": 5,
+            "Minor": 1,
+            "Patch": 0,
             "Build": 0
         },
         "FileFlagsMask": "3f",
@@ -24,12 +24,12 @@
         "FileDescription": "WinCrypt SSH Agent",
         "FileVersion": "",
         "InternalName": "",
-        "LegalCopyright": "Copyright © 2019 BUPTCZQ.",
+        "LegalCopyright": "Copyright © 2019-2020 BUPTCZQ.",
         "LegalTrademarks": "",
         "OriginalFilename": "WinCryptSSHAgent.exe",
         "PrivateBuild": "",
         "ProductName": "WinCrypt SSH Agent",
-        "ProductVersion": "v1.0.5",
+        "ProductVersion": "v1.1.0",
         "SpecialBuild": ""
     },
     "VarFileInfo": {

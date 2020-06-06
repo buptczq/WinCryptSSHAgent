@@ -15,6 +15,7 @@ var (
 	vmWildCard, _ = guid.FromString("00000000-0000-0000-0000-000000000000")
 )
 
+// TODO: check and install service
 // https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/user-guide/make-integration-service
 //$friendlyName = "WinCryptSSHAgent"
 //$service = New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices" -Name "22223333-facb-11e6-bd58-64006a7986d3"
@@ -164,4 +165,17 @@ func (*VSock) AppId() AppId {
 }
 
 func (s *VSock) Menu(register func(id AppId, name string, handler func())) {
+	register(s.AppId(), "Show WSL2 Settings", s.onClick)
+}
+
+func (s *VSock) onClick() {
+	if s.running {
+		help := "socat UNIX-LISTEN:/tmp/wincrypt-hv.sock,fork,mode=777 SOCKET-CONNECT:40:0:x0000x33332222x02000000x00000000,forever,interval=5 &\n"
+		help += "export SSH_AUTH_SOCK=/tmp/wincrypt-hv.sock\n"
+		if utils.MessageBox(s.AppId().FullName()+" (OK to copy):", help, utils.MB_OKCANCEL) == utils.IDOK {
+			utils.SetClipBoard(help)
+		}
+	} else {
+		utils.MessageBox("Error:", s.AppId().String()+" agent doesn't work!", utils.MB_ICONWARNING)
+	}
 }
