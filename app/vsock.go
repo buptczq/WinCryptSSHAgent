@@ -6,7 +6,9 @@ import (
 	"github.com/Microsoft/go-winio/pkg/guid"
 	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"io"
+	"net"
 	"sync"
+	"time"
 )
 
 var (
@@ -20,6 +22,101 @@ var (
 
 type VSock struct {
 	running bool
+}
+
+type vSockWorker struct {
+	l       net.Listener
+	handler func(conn io.ReadWriteCloser)
+}
+
+func newVSockWorker(vmid string, handler func(conn io.ReadWriteCloser)) (*vSockWorker, error) {
+	vmidGUID, err := guid.FromString(vmid)
+	if err != nil {
+		return nil, err
+	}
+	agentSrvGUID := winio.VsockServiceID(utils.ServicePort)
+	pipe, err := winio.ListenHvsock(&winio.HvsockAddr{
+		VMID:      vmidGUID,
+		ServiceID: agentSrvGUID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &vSockWorker{
+		l:       pipe,
+		handler: handler,
+	}, nil
+}
+
+func (s *vSockWorker) Run() {
+	for {
+		conn, err := s.l.Accept()
+		if err != nil {
+			return
+		}
+		go func() {
+			s.handler(conn)
+		}()
+	}
+}
+
+func (s *vSockWorker) Close() {
+	s.l.Close()
+}
+
+func vmidDiff(old, new []string) (add, del []string) {
+	add = make([]string, 0)
+	del = make([]string, 0)
+	oldIDS := make(map[string]interface{})
+	newIDS := make(map[string]interface{})
+	for _, v := range old {
+		oldIDS[v] = 0
+	}
+	for _, v := range new {
+		newIDS[v] = 0
+	}
+	for _, v := range new {
+		if _, ok := oldIDS[v]; !ok {
+			add = append(add, v)
+		}
+	}
+	for _, v := range old {
+		if _, ok := newIDS[v]; !ok {
+			del = append(del, v)
+		}
+	}
+	return
+}
+
+func (s *VSock) wsl2Watcher(ctx context.Context, handler func(conn io.ReadWriteCloser)) {
+	lastVMID := make([]string, 0)
+	workers := make(map[string]*vSockWorker)
+	for {
+		vmids := utils.GetVMID()
+		add, del := vmidDiff(lastVMID, vmids)
+		for _, v := range add {
+			w, err := newVSockWorker(v, handler)
+			if err != nil {
+				continue
+			}
+			workers[v] = w
+			go w.Run()
+		}
+		for _, v := range del {
+			w := workers[v]
+			if w != nil {
+				w.Close()
+				delete(workers, v)
+			}
+		}
+		lastVMID = vmids
+		// TODO: wait process creating event
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(time.Second * 15):
+		}
+	}
 }
 
 func (s *VSock) Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) error {
@@ -38,6 +135,9 @@ func (s *VSock) Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) 
 
 	s.running = true
 	defer pipe.Close()
+
+	// TODO: check if WSL2 is enabled
+	go s.wsl2Watcher(ctx, handler)
 
 	wg := new(sync.WaitGroup)
 	// context cancelled
