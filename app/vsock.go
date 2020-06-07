@@ -15,7 +15,6 @@ var (
 	vmWildCard, _ = guid.FromString("00000000-0000-0000-0000-000000000000")
 )
 
-// TODO: check and install service
 // https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/user-guide/make-integration-service
 //$friendlyName = "WinCryptSSHAgent"
 //$service = New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices" -Name "22223333-facb-11e6-bd58-64006a7986d3"
@@ -137,7 +136,6 @@ func (s *VSock) Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) 
 	s.running = true
 	defer pipe.Close()
 
-	// TODO: check if WSL2 is enabled
 	go s.wsl2Watcher(ctx, handler)
 
 	wg := new(sync.WaitGroup)
@@ -165,15 +163,41 @@ func (*VSock) AppId() AppId {
 }
 
 func (s *VSock) Menu(register func(id AppId, name string, handler func())) {
-	register(s.AppId(), "Show WSL2 Settings", s.onClick)
+	wsl2 := AppId(APP_WSL2)
+	register(wsl2, "Show WSL2 / Linux On Hyper-V Settings", s.onClick)
+	register(s.AppId(), "Check Hyper-V Agent Status", s.onCheckClick)
 }
 
 func (s *VSock) onClick() {
 	if s.running {
+		if !utils.CheckHVService() {
+			if utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is not working! Don you want to enable it?", utils.MB_OKCANCEL) == utils.IDOK {
+				if err := utils.RunMeElevatedWithArgs("-i"); err != nil {
+					utils.MessageBox("Install Service Error:", err.Error(), utils.MB_ICONERROR)
+					return
+				}
+			} else {
+				return
+			}
+		}
 		help := "socat UNIX-LISTEN:/tmp/wincrypt-hv.sock,fork,mode=777 SOCKET-CONNECT:40:0:x0000x33332222x02000000x00000000,forever,interval=5 &\n"
 		help += "export SSH_AUTH_SOCK=/tmp/wincrypt-hv.sock\n"
 		if utils.MessageBox(s.AppId().FullName()+" (OK to copy):", help, utils.MB_OKCANCEL) == utils.IDOK {
 			utils.SetClipBoard(help)
+		}
+	} else {
+		utils.MessageBox("Error:", s.AppId().String()+" agent doesn't work!", utils.MB_ICONWARNING)
+	}
+}
+
+func (s *VSock) onCheckClick() {
+	if s.running {
+		if !utils.CheckHVService() {
+			if utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is not working! Don you want to enable it?", utils.MB_OKCANCEL) == utils.IDOK {
+				utils.RunMeElevatedWithArgs("-i")
+			}
+		} else {
+			utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is working!", 0)
 		}
 	} else {
 		utils.MessageBox("Error:", s.AppId().String()+" agent doesn't work!", utils.MB_ICONWARNING)

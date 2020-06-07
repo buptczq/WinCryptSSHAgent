@@ -4,12 +4,15 @@ package main
 
 import (
 	"context"
+	"flag"
+	"github.com/Microsoft/go-winio"
 	"github.com/buptczq/WinCryptSSHAgent/app"
 	"github.com/buptczq/WinCryptSSHAgent/sshagent"
 	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"github.com/hattya/go.notify"
 	notification "github.com/hattya/go.notify/windows"
 	"golang.org/x/crypto/ssh/agent"
+	"golang.org/x/sys/windows/registry"
 	"os"
 	"os/signal"
 	"sync"
@@ -25,7 +28,47 @@ var applications = []app.Application{
 	new(app.Pageant),
 }
 
+var installHVService = flag.Bool("i", false, "Install Hyper-V Guest Communication Services")
+
+func installService() {
+	if !utils.IsAdmin() {
+		err := utils.RunMeElevated()
+		if err != nil {
+			utils.MessageBox("Install Service Error:", err.Error(), utils.MB_ICONERROR)
+		}
+		return
+	}
+
+	agentSrvGUID := winio.VsockServiceID(utils.ServicePort)
+	err := winio.RunWithPrivilege(winio.SeRestorePrivilege, func() error {
+		gcs, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices`, registry.ALL_ACCESS)
+		if err != nil {
+			return err
+		}
+		defer gcs.Close()
+		agentSrv, _, err := registry.CreateKey(gcs, agentSrvGUID.String(), registry.ALL_ACCESS)
+		if err != nil {
+			return err
+		}
+		err = agentSrv.SetStringValue("ElementName", "WinCryptSSHAgent")
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		utils.MessageBox("Install Service Error:", err.Error(), utils.MB_ICONERROR)
+	}
+	return
+
+}
+
 func main() {
+	flag.Parse()
+	if *installHVService {
+		installService()
+		return
+	}
 	// hyper-v
 	hvClient := false
 	hvConn, err := utils.ConnectHyperV()
@@ -109,7 +152,7 @@ cleanup:
 		done <- struct{}{}
 	}()
 	select {
-	case <-time.NewTimer(time.Second * 10).C:
+	case <-time.After(time.Second * 5):
 	case <-done:
 	}
 }

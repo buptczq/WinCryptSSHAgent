@@ -1,9 +1,27 @@
 package utils
 
 import (
+	"github.com/Microsoft/go-winio"
 	"github.com/StackExchange/wmi"
+	"golang.org/x/sys/windows/registry"
 	"strings"
 )
+
+func CheckHVService() bool {
+	gcs, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices`, registry.READ)
+	if err != nil {
+		return false
+	}
+	defer gcs.Close()
+
+	agentSrvGUID := winio.VsockServiceID(ServicePort)
+	agentSrv, err := registry.OpenKey(gcs, agentSrvGUID.String(), registry.READ)
+	if err != nil {
+		return false
+	}
+	agentSrv.Close()
+	return true
+}
 
 func GetVMID() []string {
 	type Win32_Process struct {
