@@ -73,7 +73,7 @@ func main() {
 	hvClient := false
 	hvConn, err := utils.ConnectHyperV()
 	if err == nil {
-		defer hvConn.Close()
+		hvConn.Close()
 		hvClient = true
 	}
 
@@ -92,7 +92,7 @@ func main() {
 	// agent
 	var ag agent.Agent
 	if hvClient {
-		ag = sshagent.NewHVAgent(hvConn)
+		ag = sshagent.NewHVAgent()
 	} else {
 		cag := new(sshagent.CAPIAgent)
 		defer cag.Close()

@@ -2,27 +2,36 @@ package sshagent
 
 import (
 	"fmt"
+	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
-	"net"
-	"sync"
 )
 
 type HVAgent struct {
-	mu    sync.Mutex
-	proxy agent.Agent
 }
 
-func NewHVAgent(conn net.Conn) *HVAgent {
-	return &HVAgent{proxy: agent.NewClient(conn)}
+func NewHVAgent() *HVAgent {
+	return &HVAgent{}
 }
 
 func (s *HVAgent) List() ([]*agent.Key, error) {
-	return s.proxy.List()
+	conn, err := utils.ConnectHyperV()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	proxy := agent.NewClient(conn)
+	return proxy.List()
 }
 
 func (s *HVAgent) Sign(key ssh.PublicKey, data []byte) (*ssh.Signature, error) {
-	return s.proxy.Sign(key, data)
+	conn, err := utils.ConnectHyperV()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	proxy := agent.NewClient(conn)
+	return proxy.Sign(key, data)
 }
 
 func (s *HVAgent) Add(key agent.AddedKey) error {
