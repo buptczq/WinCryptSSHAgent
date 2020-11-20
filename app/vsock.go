@@ -124,6 +124,15 @@ func (s *VSock) Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) 
 	if isHV {
 		return nil
 	}
+
+	if !utils.CheckHvSocket() {
+		return nil
+	}
+
+	if !utils.CheckHVService() {
+		return nil
+	}
+
 	agentSrvGUID := winio.VsockServiceID(utils.ServicePort)
 	pipe, err := winio.ListenHvsock(&winio.HvsockAddr{
 		VMID:      vmWildCard,
@@ -163,6 +172,9 @@ func (*VSock) AppId() AppId {
 }
 
 func (s *VSock) Menu(register func(id AppId, name string, handler func())) {
+	if !utils.CheckHvSocket() {
+		return
+	}
 	wsl2 := AppId(APP_WSL2)
 	register(wsl2, "Show WSL2 / Linux On Hyper-V Settings", s.onClick)
 	register(s.AppId(), "Check Hyper-V Agent Status", s.onCheckClick)
@@ -170,36 +182,36 @@ func (s *VSock) Menu(register func(id AppId, name string, handler func())) {
 
 func (s *VSock) onClick() {
 	if s.running {
-		if !utils.CheckHVService() {
-			if utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is not working! Don you want to enable it?", utils.MB_OKCANCEL) == utils.IDOK {
-				if err := utils.RunMeElevatedWithArgs("-i"); err != nil {
-					utils.MessageBox("Install Service Error:", err.Error(), utils.MB_ICONERROR)
-					return
-				}
-			} else {
-				return
-			}
-		}
 		help := "socat UNIX-LISTEN:/tmp/wincrypt-hv.sock,fork,mode=777 SOCKET-CONNECT:40:0:x0000x33332222x02000000x00000000,forever,interval=5 &\n"
 		help += "export SSH_AUTH_SOCK=/tmp/wincrypt-hv.sock\n"
 		if utils.MessageBox(s.AppId().FullName()+" (OK to copy):", help, utils.MB_OKCANCEL) == utils.IDOK {
 			utils.SetClipBoard(help)
 		}
 	} else {
-		utils.MessageBox("Error:", s.AppId().String()+" agent doesn't work!", utils.MB_ICONWARNING)
+		if !utils.CheckHVService() {
+			if utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is not working! Don you want to enable it?", utils.MB_OKCANCEL) == utils.IDOK {
+				if err := utils.RunMeElevatedWithArgs("-i"); err != nil {
+					utils.MessageBox("Install Service Error:", err.Error(), utils.MB_ICONERROR)
+				}
+			}
+		} else {
+			utils.MessageBox("Error:", s.AppId().String()+" agent doesn't work!", utils.MB_ICONWARNING)
+		}
 	}
 }
 
 func (s *VSock) onCheckClick() {
 	if s.running {
+		utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is working!", 0)
+	} else {
 		if !utils.CheckHVService() {
 			if utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is not working! Don you want to enable it?", utils.MB_OKCANCEL) == utils.IDOK {
-				utils.RunMeElevatedWithArgs("-i")
+				if err := utils.RunMeElevatedWithArgs("-i"); err != nil {
+					utils.MessageBox("Install Service Error:", err.Error(), utils.MB_ICONERROR)
+				}
 			}
 		} else {
-			utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is working!", 0)
+			utils.MessageBox("Error:", s.AppId().String()+" agent doesn't work!", utils.MB_ICONWARNING)
 		}
-	} else {
-		utils.MessageBox("Error:", s.AppId().String()+" agent doesn't work!", utils.MB_ICONWARNING)
 	}
 }

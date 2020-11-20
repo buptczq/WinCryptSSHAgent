@@ -5,7 +5,10 @@ import (
 	"github.com/StackExchange/wmi"
 	"golang.org/x/sys/windows/registry"
 	"strings"
+	"syscall"
 )
+
+const afHvSock = 34 // AF_HYPERV
 
 func CheckHVService() bool {
 	gcs, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices`, registry.READ)
@@ -49,4 +52,14 @@ func GetVMID() []string {
 		results = append(results, k[1:len(k)-1])
 	}
 	return results
+}
+
+func CheckHvSocket() bool {
+	fd, err := syscall.Socket(afHvSock, syscall.SOCK_STREAM, 1)
+	if err != nil {
+		println(err.Error())
+		return false
+	}
+	syscall.Close(fd)
+	return true
 }

@@ -58,6 +58,8 @@ func installService() {
 	})
 	if err != nil {
 		utils.MessageBox("Install Service Error:", err.Error(), utils.MB_ICONERROR)
+	} else {
+		utils.MessageBox("Install Service Success:", "Please reboot your computer to take effect!", utils.MB_ICONINFORMATION)
 	}
 	return
 
