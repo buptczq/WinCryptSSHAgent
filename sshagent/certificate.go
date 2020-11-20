@@ -6,10 +6,16 @@ import (
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 func loadCertFile(filename string) (*ssh.Certificate, error) {
-	file, err := os.Open(filename)
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+	path := filepath.Join(home, filename)
+	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}

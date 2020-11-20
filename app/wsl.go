@@ -19,10 +19,11 @@ type WSL struct {
 }
 
 func listenUnixSock(filename string) (string, net.Listener, error) {
-	path, err := filepath.Abs(filename)
+	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", nil, err
 	}
+	path := filepath.Join(home, CYGWIN_SOCK)
 	os.Remove(path)
 	l, err := net.Listen("unix", path)
 	return path, l, err

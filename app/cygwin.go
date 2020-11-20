@@ -66,10 +66,11 @@ func cygwinHandshake(conn net.Conn, uuid []byte) error {
 }
 
 func (s *Cygwin) Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) error {
-	sockfile, err := filepath.Abs(CYGWIN_SOCK)
+	home, err := os.UserHomeDir()
 	if err != nil {
 		return err
 	}
+	sockfile := filepath.Join(home, CYGWIN_SOCK)
 	s.sockfile = sockfile
 	// listen tcp socket
 	l, err := net.Listen("tcp", "localhost:0")
