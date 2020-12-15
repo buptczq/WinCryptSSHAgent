@@ -27,10 +27,17 @@ jobs:
     - name: Run go generate
       run: go generate
 
-    - name: Build
-      run: go build -v -ldflags -H=windowsgui
+    - name: Build amd64
+      run: go build -v -o WinCryptSSHAgent.exe -ldflags -H=windowsgui
+      env:
+        GOARCH: amd64
 
-    - name: Upload a Build Artifact
+    - name: Build 386
+      run: go build -v -o WinCryptSSHAgent_32bit.exe -ldflags -H=windowsgui
+      env:
+        GOARCH: '386'
+        
+    - name: Upload Build Artifacts
       uses: actions/upload-artifact@v2.2.1
       with:
-        path: WinCryptSSHAgent.exe
+        path: 'WinCryptSSHAgent*.exe'
