@@ -1,0 +1,36 @@
+name: Go
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: windows-latest
+    steps:
+
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.13
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Install goversioninfo
+      run: go get github.com/josephspurrier/goversioninfo/cmd/goversioninfo
+
+    - name: Run go generate
+      run: go generate
+
+    - name: Build
+      run: go build -v -ldflags -H=windowsgui
+
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2.2.1
+      with:
+        path: WinCryptSSHAgent.exe
