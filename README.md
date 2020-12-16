@@ -1,5 +1,7 @@
 # WinCrypt SSH Agent
 
+![CI](https://github.com/buptczq/WinCryptSSHAgent/workflows/Go/badge.svg)
+
 ## Introduction
 
 A SSH Agent based-on Windows CryptoAPI.
