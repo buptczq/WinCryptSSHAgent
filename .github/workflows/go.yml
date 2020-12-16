@@ -1,10 +1,6 @@
 name: Go
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 jobs:
 
@@ -37,7 +33,12 @@ jobs:
       env:
         GOARCH: '386'
         
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v2.2.1
+    - name: Upload Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        path: 'WinCryptSSHAgent*.exe'
+        files: 'WinCryptSSHAgent*.exe'
+        draft: true
+        prerelease: true
