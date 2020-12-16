@@ -12,9 +12,11 @@ import (
 	"github.com/hattya/go.notify"
 	notification "github.com/hattya/go.notify/windows"
 	"golang.org/x/crypto/ssh/agent"
+	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -65,8 +67,32 @@ func installService() {
 
 }
 
+func initDebugLog() {
+	if os.Getenv("WCSA_DEBUG") == "1" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return
+		}
+		f, err := os.OpenFile(filepath.Join(home, "WCSA_DEBUG.log"), os.O_WRONLY|os.O_CREATE|os.O_SYNC|os.O_APPEND, 0664)
+		if err != nil {
+			return
+		}
+		err = windows.SetStdHandle(windows.STD_OUTPUT_HANDLE, windows.Handle(f.Fd()))
+		if err != nil {
+			return
+		}
+		err = windows.SetStdHandle(windows.STD_ERROR_HANDLE, windows.Handle(f.Fd()))
+		if err != nil {
+			return
+		}
+		os.Stdout = f
+		os.Stderr = f
+	}
+}
+
 func main() {
 	flag.Parse()
+	initDebugLog()
 	if *installHVService {
 		installService()
 		return

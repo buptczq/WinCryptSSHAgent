@@ -23,7 +23,7 @@ func listenUnixSock(filename string) (string, net.Listener, error) {
 	if err != nil {
 		return "", nil, err
 	}
-	path := filepath.Join(home, WSL_SOCK)
+	path := filepath.Join(home, filename)
 	os.Remove(path)
 	l, err := net.Listen("unix", path)
 	return path, l, err
