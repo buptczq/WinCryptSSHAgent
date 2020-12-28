@@ -189,7 +189,7 @@ func (s *VSock) onClick() {
 		}
 	} else {
 		if !utils.CheckHVService() {
-			if utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is not working! Don you want to enable it?", utils.MB_OKCANCEL) == utils.IDOK {
+			if utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is not working! Do you want to enable it?", utils.MB_OKCANCEL) == utils.IDOK {
 				if err := utils.RunMeElevatedWithArgs("-i"); err != nil {
 					utils.MessageBox("Install Service Error:", err.Error(), utils.MB_ICONERROR)
 				}
@@ -205,7 +205,7 @@ func (s *VSock) onCheckClick() {
 		utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is working!", 0)
 	} else {
 		if !utils.CheckHVService() {
-			if utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is not working! Don you want to enable it?", utils.MB_OKCANCEL) == utils.IDOK {
+			if utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is not working! Do you want to enable it?", utils.MB_OKCANCEL) == utils.IDOK {
 				if err := utils.RunMeElevatedWithArgs("-i"); err != nil {
 					utils.MessageBox("Install Service Error:", err.Error(), utils.MB_ICONERROR)
 				}
