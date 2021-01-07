@@ -73,7 +73,7 @@ Unlike TLS using X.509, OpenSSH uses a special certificate format, thus we can't
 
 To deal with OpenSSH Certificates, this project introduces a public key override mechanism.
 
-If you want to work with OpenSSH certificates, you should put your OpenSSH Certificates in the same folder of this application, rename them to `<Your Certificate Common Name>-cert.pub` or `<Your Certificate Serial Number>-cert.pub`.
+If you want to work with OpenSSH certificates, you should put your OpenSSH Certificates in your `user profile` folder, rename them to `<Your Certificate Common Name>-cert.pub` or `<Your Certificate Serial Number>-cert.pub`.
 
 ### Contribute
 
