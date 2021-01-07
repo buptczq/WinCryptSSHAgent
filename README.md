@@ -10,6 +10,9 @@ This project allows other programs to access SSH keys stored in your Windows Cer
 
 Benefit by Windows Certificate Management, this project natively supports the use of windows user certificates or smart cards, e.g., Yubikey PIV, for authentication.
 
+## Overview
+![Overview](overview.svg)
+
 ## Feature
 
 * Work with smart cards natively without installing any driver in Windows (PIV only)
