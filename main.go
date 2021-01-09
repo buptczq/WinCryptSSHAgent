@@ -92,6 +92,7 @@ func initDebugLog() {
 
 func main() {
 	flag.Parse()
+	utils.SetProcessSystemDpiAware()
 	initDebugLog()
 	if *installHVService {
 		installService()
