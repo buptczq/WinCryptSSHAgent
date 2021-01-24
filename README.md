@@ -65,6 +65,8 @@ Additionally, you may make an shortcut of this application to the startup folder
 
 Note: Some SSH clients using Pageant Protocol, e.g., Putty, XShell and Jetbrains, needn't any setting in system wide, thus you can't see Pageant in the menu.
 
+Check [Yubikey with WSL tutorial](doc/wsl_tutorial.md) to start using Yubikey with SSH on WSL.
+
 ### OpenSSH Certificates
 
 OpenSSH supports authentication using SSH certificates. Certificates contain a public key, identity information and are signed with a standard SSH key.
