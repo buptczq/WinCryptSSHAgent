@@ -2,9 +2,10 @@ package app
 
 import (
 	"context"
+	"io"
+
 	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"golang.org/x/crypto/ssh/agent"
-	"io"
 )
 
 type PubKeyView struct {
@@ -31,9 +32,13 @@ func (s *PubKeyView) onClick() {
 		return
 	}
 
-	pubkey := ""
-	for _, key := range keys {
-		pubkey += key.String() + "\n"
+	var pubkey string
+	if len(keys) == 0 {
+		pubkey = "No Keys"
+	} else {
+		for _, key := range keys {
+			pubkey += key.String() + "\n"
+		}
 	}
 
 	if utils.MessageBox("Public Keys (OK to copy):", pubkey, utils.MB_OKCANCEL) == utils.IDOK {

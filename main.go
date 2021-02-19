@@ -32,6 +32,7 @@ var applications = []app.Application{
 }
 
 var installHVService = flag.Bool("i", false, "Install Hyper-V Guest Communication Services")
+var disableCapi = flag.Bool("disable-capi", false, "Disable Windows Crypto API")
 
 func installService() {
 	if !utils.IsAdmin() {
@@ -123,6 +124,8 @@ func main() {
 	var ag agent.Agent
 	if hvClient {
 		ag = sshagent.NewHVAgent()
+	} else if *disableCapi {
+		ag = agent.NewKeyring()
 	} else {
 		cag := new(sshagent.CAPIAgent)
 		defer cag.Close()
