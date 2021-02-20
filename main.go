@@ -5,20 +5,21 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/Microsoft/go-winio"
-	"github.com/buptczq/WinCryptSSHAgent/app"
-	"github.com/buptczq/WinCryptSSHAgent/sshagent"
-	"github.com/buptczq/WinCryptSSHAgent/utils"
-	"github.com/hattya/go.notify"
-	notification "github.com/hattya/go.notify/windows"
-	"golang.org/x/crypto/ssh/agent"
-	"golang.org/x/sys/windows"
-	"golang.org/x/sys/windows/registry"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/Microsoft/go-winio"
+	"github.com/buptczq/WinCryptSSHAgent/app"
+	"github.com/buptczq/WinCryptSSHAgent/sshagent"
+	"github.com/buptczq/WinCryptSSHAgent/utils"
+	notify "github.com/hattya/go.notify"
+	notification "github.com/hattya/go.notify/windows"
+	"golang.org/x/crypto/ssh/agent"
+	"golang.org/x/sys/windows"
+	"golang.org/x/sys/windows/registry"
 )
 
 var applications = []app.Application{
@@ -31,6 +32,7 @@ var applications = []app.Application{
 }
 
 var installHVService = flag.Bool("i", false, "Install Hyper-V Guest Communication Services")
+var disableCapi = flag.Bool("disable-capi", false, "Disable Windows Crypto API")
 
 func installService() {
 	if !utils.IsAdmin() {
@@ -122,14 +124,19 @@ func main() {
 	var ag agent.Agent
 	if hvClient {
 		ag = sshagent.NewHVAgent()
+	} else if *disableCapi {
+		ag = agent.NewKeyring()
 	} else {
 		cag := new(sshagent.CAPIAgent)
 		defer cag.Close()
-		ag = cag
+		defaultAgent := agent.NewKeyring()
+		ag = sshagent.NewWrappedAgent(defaultAgent, []agent.Agent{agent.Agent(cag)})
 	}
 	ctx = context.WithValue(ctx, "agent", ag)
 	ctx = context.WithValue(ctx, "hv", hvClient)
-	server := &sshagent.Server{ag}
+	server := &sshagent.Server{
+		Agent: ag,
+	}
 
 	// application
 	wg := new(sync.WaitGroup)
@@ -146,7 +153,7 @@ func main() {
 	}
 
 	// interrupt signal
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 
 	// show systray
