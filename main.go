@@ -125,11 +125,11 @@ func main() {
 	if hvClient {
 		ag = sshagent.NewHVAgent()
 	} else if *disableCapi {
-		ag = agent.NewKeyring()
+		ag = sshagent.NewKeyRingAgent()
 	} else {
 		cag := new(sshagent.CAPIAgent)
 		defer cag.Close()
-		defaultAgent := agent.NewKeyring()
+		defaultAgent := sshagent.NewKeyRingAgent()
 		ag = sshagent.NewWrappedAgent(defaultAgent, []agent.Agent{agent.Agent(cag)})
 	}
 	ctx = context.WithValue(ctx, "agent", ag)
