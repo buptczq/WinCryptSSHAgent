@@ -43,14 +43,13 @@ func installService() {
 		return
 	}
 
-	agentSrvGUID := winio.VsockServiceID(utils.ServicePort)
 	err := winio.RunWithPrivilege(winio.SeRestorePrivilege, func() error {
-		gcs, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices`, registry.ALL_ACCESS)
+		gcs, err := registry.OpenKey(registry.LOCAL_MACHINE, utils.HyperVServiceRegPath, registry.ALL_ACCESS)
 		if err != nil {
 			return err
 		}
 		defer gcs.Close()
-		agentSrv, _, err := registry.CreateKey(gcs, agentSrvGUID.String(), registry.ALL_ACCESS)
+		agentSrv, _, err := registry.CreateKey(gcs, utils.HyperVServiceGUID.String(), registry.ALL_ACCESS)
 		if err != nil {
 			return err
 		}
