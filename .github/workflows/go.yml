@@ -20,19 +20,10 @@ jobs:
     - name: Install goversioninfo
       run: go get github.com/josephspurrier/goversioninfo/cmd/goversioninfo
 
-    - name: Run go generate
-      run: go generate
+    - name: Build
+      shell: cmd
+      run: build.bat
 
-    - name: Build amd64
-      run: go build -v -o WinCryptSSHAgent.exe -ldflags -H=windowsgui
-      env:
-        GOARCH: amd64
-
-    - name: Build 386
-      run: go build -v -o WinCryptSSHAgent_32bit.exe -ldflags -H=windowsgui
-      env:
-        GOARCH: '386'
-        
     - name: Upload Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
