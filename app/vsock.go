@@ -2,13 +2,14 @@ package app
 
 import (
 	"context"
-	"github.com/Microsoft/go-winio"
-	"github.com/Microsoft/go-winio/pkg/guid"
-	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"io"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/Microsoft/go-winio"
+	"github.com/Microsoft/go-winio/pkg/guid"
+	"github.com/buptczq/WinCryptSSHAgent/utils"
 )
 
 var (
@@ -34,10 +35,9 @@ func newVSockWorker(vmid string, handler func(conn io.ReadWriteCloser)) (*vSockW
 	if err != nil {
 		return nil, err
 	}
-	agentSrvGUID := winio.VsockServiceID(utils.ServicePort)
 	pipe, err := winio.ListenHvsock(&winio.HvsockAddr{
 		VMID:      vmidGUID,
-		ServiceID: agentSrvGUID,
+		ServiceID: utils.HyperVServiceGUID,
 	})
 	if err != nil {
 		return nil, err
@@ -89,11 +89,11 @@ func vmidDiff(old, new []string) (add, del []string) {
 }
 
 func (s *VSock) wsl2Watcher(ctx context.Context, handler func(conn io.ReadWriteCloser)) {
-	lastVMID := make([]string, 0)
+	lastVMIDs := make([]string, 0)
 	workers := make(map[string]*vSockWorker)
 	for {
-		vmids := utils.GetVMID()
-		add, del := vmidDiff(lastVMID, vmids)
+		vmids := utils.GetVMIDs()
+		add, del := vmidDiff(lastVMIDs, vmids)
 		for _, v := range add {
 			w, err := newVSockWorker(v, handler)
 			if err != nil {
@@ -109,7 +109,7 @@ func (s *VSock) wsl2Watcher(ctx context.Context, handler func(conn io.ReadWriteC
 				delete(workers, v)
 			}
 		}
-		lastVMID = vmids
+		lastVMIDs = vmids
 		// TODO: wait process creating event
 		select {
 		case <-ctx.Done():
@@ -133,10 +133,9 @@ func (s *VSock) Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) 
 		return nil
 	}
 
-	agentSrvGUID := winio.VsockServiceID(utils.ServicePort)
 	pipe, err := winio.ListenHvsock(&winio.HvsockAddr{
 		VMID:      vmWildCard,
-		ServiceID: agentSrvGUID,
+		ServiceID: utils.HyperVServiceGUID,
 	})
 	if err != nil {
 		return err
@@ -181,37 +180,39 @@ func (s *VSock) Menu(register func(id AppId, name string, handler func())) {
 }
 
 func (s *VSock) onClick() {
-	if s.running {
-		help := "socat UNIX-LISTEN:/tmp/wincrypt-hv.sock,fork,mode=777 SOCKET-CONNECT:40:0:x0000x33332222x02000000x00000000,forever,interval=5 &\n"
-		help += "export SSH_AUTH_SOCK=/tmp/wincrypt-hv.sock\n"
-		if utils.MessageBox(s.AppId().FullName()+" (OK to copy):", help, utils.MB_OKCANCEL) == utils.IDOK {
-			utils.SetClipBoard(help)
-		}
-	} else {
-		if !utils.CheckHVService() {
-			if utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is not working! Do you want to enable it?", utils.MB_OKCANCEL) == utils.IDOK {
-				if err := utils.RunMeElevatedWithArgs("-i"); err != nil {
-					utils.MessageBox("Install Service Error:", err.Error(), utils.MB_ICONERROR)
-				}
-			}
-		} else {
-			utils.MessageBox("Error:", s.AppId().String()+" agent doesn't work!", utils.MB_ICONWARNING)
-		}
+	if !s.running {
+		s.checkHvService()
+		return
+	}
+
+	help := `export SSH_AUTH_SOCK=/tmp/wincrypt-hv.sock
+ss -lnx | grep -q $SSH_AUTH_SOCK
+if [ $? -ne 0 ]; then
+  (setsid nohup socat UNIX-LISTEN:$SSH_AUTH_SOCK,fork SOCKET-CONNECT:40:0:x0000x333322220x02000000x00000000 >/dev/null 2>&1)
+fi`
+	if utils.MessageBox(s.AppId().FullName()+" (OK to copy):", help, utils.MB_OKCANCEL) == utils.IDOK {
+		utils.SetClipBoard(help)
 	}
 }
 
 func (s *VSock) onCheckClick() {
-	if s.running {
-		utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is working!", 0)
-	} else {
-		if !utils.CheckHVService() {
-			if utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is not working! Do you want to enable it?", utils.MB_OKCANCEL) == utils.IDOK {
-				if err := utils.RunMeElevatedWithArgs("-i"); err != nil {
-					utils.MessageBox("Install Service Error:", err.Error(), utils.MB_ICONERROR)
-				}
-			}
-		} else {
-			utils.MessageBox("Error:", s.AppId().String()+" agent doesn't work!", utils.MB_ICONWARNING)
+	if !s.running {
+		s.checkHvService()
+		return
+	}
+
+	utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is working!", 0)
+}
+
+func (s *VSock) checkHvService() {
+	if utils.CheckHVService() {
+		utils.MessageBox("Error:", s.AppId().String()+" agent doesn't work!", utils.MB_ICONWARNING)
+		return
+	}
+
+	if utils.MessageBox(s.AppId().FullName()+":", s.AppId().String()+" agent is not working! Do you want to enable it?", utils.MB_OKCANCEL) == utils.IDOK {
+		if err := utils.RunMeElevatedWithArgs("-i"); err != nil {
+			utils.MessageBox("Install Service Error:", err.Error(), utils.MB_ICONERROR)
 		}
 	}
 }
