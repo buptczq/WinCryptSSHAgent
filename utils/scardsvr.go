@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/StackExchange/wmi"
+	"github.com/bi-zone/wmi"
 	"golang.org/x/sys/windows"
 	"os"
 	"syscall"

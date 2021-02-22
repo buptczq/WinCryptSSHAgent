@@ -89,6 +89,17 @@ func vmidDiff(old, new []string) (add, del []string) {
 }
 
 func (s *VSock) wsl2Watcher(ctx context.Context, handler func(conn io.ReadWriteCloser)) {
+	timeout := time.Second * 60
+	ch := make(chan *utils.ProcessEvent, 1)
+	pn, err := utils.NewProcessNotify("wslhost.exe", ch)
+	if err != nil {
+		// fallback to polling mode
+		timeout = time.Second * 15
+		println("ProcessNotify error:", err.Error())
+	} else {
+		pn.Start()
+		defer pn.Stop()
+	}
 	lastVMIDs := make([]string, 0)
 	workers := make(map[string]*vSockWorker)
 	for {
@@ -110,11 +121,11 @@ func (s *VSock) wsl2Watcher(ctx context.Context, handler func(conn io.ReadWriteC
 			}
 		}
 		lastVMIDs = vmids
-		// TODO: wait process creating event
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(time.Second * 15):
+		case <-ch:
+		case <-time.After(timeout):
 		}
 	}
 }
