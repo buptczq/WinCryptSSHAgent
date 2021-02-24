@@ -35,7 +35,7 @@ With the support of these protocols, this project is compatible with most SSH cl
 * Windows OpenSSH
 * Putty
 * Jetbrains
-* SecureCRT
+* SecureCRT 8.X
 * XShell
 * Cygwin
 * MINGW
