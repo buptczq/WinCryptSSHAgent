@@ -3,13 +3,13 @@
         "FileVersion": {
             "Major": 1,
             "Minor": 1,
-            "Patch": 6,
+            "Patch": 7,
             "Build": 0
         },
         "ProductVersion": {
             "Major": 1,
             "Minor": 1,
-            "Patch": 6,
+            "Patch": 7,
             "Build": 0
         },
         "FileFlagsMask": "3f",
@@ -29,7 +29,7 @@
         "OriginalFilename": "WinCryptSSHAgent.exe",
         "PrivateBuild": "",
         "ProductName": "WinCrypt SSH Agent",
-        "ProductVersion": "v1.1.6",
+        "ProductVersion": "v1.1.7",
         "SpecialBuild": ""
     },
     "VarFileInfo": {
