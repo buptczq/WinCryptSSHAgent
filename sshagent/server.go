@@ -14,5 +14,8 @@ func (s *Server) SSHAgentHandler(conn io.ReadWriteCloser) {
 	if s.Agent == nil {
 		return
 	}
-	agent.ServeAgent(s.Agent, conn)
+	err := agent.ServeAgent(s.Agent, conn)
+	if err != nil {
+		println(err.Error())
+	}
 }

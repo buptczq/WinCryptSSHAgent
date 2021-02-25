@@ -29,6 +29,7 @@ var applications = []app.Application{
 	new(app.Cygwin),
 	new(app.NamedPipe),
 	new(app.Pageant),
+	new(app.XShell),
 }
 
 var installHVService = flag.Bool("i", false, "Install Hyper-V Guest Communication Services")

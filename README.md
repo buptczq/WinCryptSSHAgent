@@ -21,12 +21,13 @@ Benefit by Windows Certificate Management, this project natively supports the us
 
 ## Compatibility
 
-There are many different OpenSSH agent implementations in Windows. This project implements 4 popular protocols in Windows:
+There are many different OpenSSH agent implementations in Windows. This project implements five popular protocols in Windows:
 
 * Cygwin UNIX Socket
 * Windows UNIX Socket (Windows 10 1803 or later)
 * Named pipe
 * Pageant SSH Agent Protocol
+* XShell Xagent Protocol
 
 With the support of these protocols, this project is compatible with most SSH clients in Windows. For example:
 
@@ -35,7 +36,7 @@ With the support of these protocols, this project is compatible with most SSH cl
 * Windows OpenSSH
 * Putty
 * Jetbrains
-* SecureCRT 8.X
+* SecureCRT
 * XShell
 * Cygwin
 * MINGW
