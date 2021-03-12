@@ -1,6 +1,6 @@
 # Yubikey on WSL
 
-This tutorial will guide you to confgure YubiKey so it can be used with SSH under WSL. We will use YubiKey as PIV Compatible Smart Card. Note that YubiKey has also other modes that can be used for secure SHH access like GPG that are not covered in this tutorial.
+This tutorial will guide you to confgure YubiKey so it can be used with SSH under WSL. We will use YubiKey as a PIV Compatible Smart Card. Note that YubiKey also has other modes that can be used for secure SHH access like GPG that are not covered in this tutorial.
 
 ## Prerequisites
 
@@ -15,7 +15,7 @@ This tutorial will guide you to confgure YubiKey so it can be used with SSH unde
 
 ### Insert YubiKey into USB port of your computer
    
-You can check with Device Manager (`devmgmt.msc`) that system recognized your key. It will be listed under *Smart Cards* as *YubiKey Smart Card Minidriver*.
+You can check with Device Manager (`devmgmt.msc`) that the system recognized your key. It will be listed under *Smart Cards* as *YubiKey Smart Card Minidriver*.
 
 ### Change default PIN and PUK
 
@@ -26,7 +26,7 @@ Execute following commands, provide new PIN and PUK when prompted:
 1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv change-puk --puk 12345678`
 1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv change-management-key --generate --protect --touch`
 
-  This will give you a YubiKey with PIN and PUK that is only knwon to you and requires touch to change keys on it.
+  This will give you a YubiKey with PIN and PUK that is only known to you and requires touch to change keys on it.
 
 ### Generate Keys
 
@@ -36,7 +36,7 @@ Execute following commands, provide new PIN and PUK when prompted:
 
 1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv generate-certificate --valid-days 365 --subject "SSH Key" 9a "%UserProfile%\Desktop\%username%_public_key.pem"`
 
-    Command generatea certificate from your public key. In brief: Windows needs it when speaking to your YubiKey.
+    Command generates a certificate from your public key. In brief: Windows needs it when speaking to your YubiKey.
 
 ### Check Windows Certificate Store 
 
@@ -65,7 +65,7 @@ Execute following commands, provide new PIN and PUK when prompted:
 1. `ssh` into your machine.
 1. Provide PIN when Windows asks.
 1. Touch YubiKey twice (it should be blinking).
-1. You shold eb allowed into yout trget machine. Enjoy! :rocket:
+1. You should be allowed into your target machine. Enjoy! :rocket:
 
 
 
