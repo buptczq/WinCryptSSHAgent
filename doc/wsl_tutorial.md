@@ -21,20 +21,20 @@ You can check with Device Manager (`devmgmt.msc`) that the system recognized you
 
 Execute following commands, provide new PIN and PUK when prompted:
 
-1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv set-pin-retries 5 10`
-1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv change-pin --pin 123456`
-1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv change-puk --puk 12345678`
-1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv change-management-key --generate --protect --touch`
+1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv access set-retries 5 10`
+1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv access change-pin --pin 123456`
+1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv access change-puk --puk 12345678`
+1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv access change-management-key --generate --protect --touch`
 
   This will give you a YubiKey with PIN and PUK that is only known to you and requires touch to change keys on it.
 
 ### Generate Keys
 
-1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv generate-key --algorithm ECCP384 --format PEM --pin-policy ONCE --touch-policy ALWAYS 9a "%UserProfile%\Desktop\%username%_public_key.pem"`
+1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv keys generate --algorithm ECCP384 --format PEM --pin-policy ONCE --touch-policy ALWAYS 9a "%UserProfile%\Desktop\%username%_public_key.pem"`
 
     Command generates private key inside of YubiKey. It is not possible to extract it so it is very secure. Also it requires a touch every time it is used for authentication.
 
-1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv generate-certificate --valid-days 365 --subject "SSH Key" 9a "%UserProfile%\Desktop\%username%_public_key.pem"`
+1. `"C:\Program Files\Yubico\YubiKey Manager\ykman.exe" piv certificates generate --valid-days 365 --subject "SSH Key" 9a "%UserProfile%\Desktop\%username%_public_key.pem"`
 
     Command generates a certificate from your public key. In brief: Windows needs it when speaking to your YubiKey.
 
@@ -43,6 +43,8 @@ Execute following commands, provide new PIN and PUK when prompted:
  1. Unplug your YubiKey.
  1. Plug your YubiKey back.
  1. Run Certificate Manager Tool (`certmgr.msc`) and in *Certificates - Current User \ Personal \ Certificates* your certificate named **SSH key** should be visible.
+
+***NOTE:*** If the certificate is not visible, make sure [Allow ECC certificates to be used for logon and authentication](https://docs.microsoft.com/en-us/windows/security/identity-protection/smart-cards/smart-card-group-policy-and-registry-settings#allow-ecc-certificates-to-be-used-for-logon-and-authentication) in *Group Policy Editor (gpedit.msc) > Computer Configuration > Administrative Templates > Windows Components > Smart Card* is enabled.
 
 ### Confiure YubiKey for SSH in WLS and target machine
 
