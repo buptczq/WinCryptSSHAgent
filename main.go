@@ -22,6 +22,8 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
+const agentTitle = "WinCrypt SSH Agent v1.1.8"
+
 var applications = []app.Application{
 	new(app.PubKeyView),
 	new(app.WSL),
@@ -198,7 +200,7 @@ func initSystray(hv bool) (notify.Notifier, error) {
 	if err != nil {
 		return nil, err
 	}
-	title := "WinCrypt SSH Agent"
+	title := agentTitle
 	if hv {
 		title += " (Hyper-V)"
 	}
