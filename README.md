@@ -60,13 +60,20 @@ Additionally, you may make an shortcut of this application to the startup folder
 
 ### Basic Usage
 
-1. Start WinCrypt SSH Agent
+1. Start WinCryptSSHAgent
 2. Right-click the icon on your taskbar
 3. You can get necessary information by selecting your interesting item in the menu
 
 Note: Some SSH clients using Pageant Protocol, e.g., Putty, XShell and Jetbrains, needn't any setting in system wide, thus you can't see Pageant in the menu.
 
 Check [Yubikey with WSL tutorial](doc/wsl_tutorial.md) to start using Yubikey with SSH on WSL.
+
+### Work with Xshell:
+
+1. Install and run WinCryptSSHAgent
+2. Open the Properties dialog box of your session.
+3. From Category, select 'SSH', Select 'Use Xagent (SSH agent)' for passphrase handling.
+4. From Category, select 'Authentication' and select 'Public Key' as the authentication method.
 
 ### OpenSSH Certificates
 
