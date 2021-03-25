@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
@@ -46,7 +47,7 @@ func (s *XShell) Run(ctx context.Context, handler func(conn io.ReadWriteCloser))
 		}
 		wg.Add(1)
 		go func(c io.ReadWriteCloser) {
-			w := &xshellProxy{c, nil}
+			w := &xshellProxy{conn: c}
 			handler(w)
 			wg.Done()
 		}(conn)
@@ -110,19 +111,26 @@ func xshellHandshake(conn net.Conn, cookie string) error {
 	var repMsg initAgentRepMsg
 	repMsg.Flag = initMsg.Flag
 	rep := ssh.Marshal(&repMsg)
-	binary.BigEndian.PutUint32(length[:], uint32(len(rep)))
-	if _, err := conn.Write(length[:]); err != nil {
+	buf := bytes.NewBuffer(nil)
+	err := binary.Write(buf, binary.BigEndian, uint32(len(rep)))
+	if err != nil {
 		return err
 	}
-	if _, err := conn.Write(rep); err != nil {
+	_, err = buf.Write(rep)
+	if err != nil {
+		return err
+	}
+	if _, err := conn.Write(buf.Bytes()); err != nil {
 		return err
 	}
 	return nil
 }
 
 type xshellProxy struct {
-	conn io.ReadWriteCloser
-	buf  []byte
+	conn    io.ReadWriteCloser
+	buf     []byte
+	wlength int
+	wbuf    []byte
 }
 
 type signRequestAgentMsg struct {
@@ -168,7 +176,28 @@ func (s *xshellProxy) Read(p []byte) (n int, err error) {
 }
 
 func (s *xshellProxy) Write(p []byte) (n int, err error) {
-	return s.conn.Write(p)
+	// xshell treats TCP as a message-oriented connection
+	// this piece of sh*t code is in order to be compatible with xshell
+	if s.wlength == 0 {
+		if len(p) != 4 {
+			return 0, fmt.Errorf("xagent proxy: invalid write status")
+		}
+		s.wlength = int(binary.BigEndian.Uint32(p)) + 4
+		s.wbuf = append(s.wbuf, p...)
+	} else {
+		s.wbuf = append(s.wbuf, p...)
+		if len(s.wbuf) == s.wlength {
+			s.wlength = 0
+			_, err := s.conn.Write(s.wbuf)
+			if err != nil {
+				return 0, err
+			}
+			s.wbuf = nil
+		} else if len(s.wbuf) > s.wlength {
+			return 0, fmt.Errorf("xagent proxy: invalid write length")
+		}
+	}
+	return len(p), nil
 }
 
 func (s *xshellProxy) Close() error {
