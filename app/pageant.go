@@ -4,13 +4,18 @@ import (
 	"context"
 	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"io"
+	"os"
 	"sync"
 )
 
 type Pageant struct{}
 
 func (*Pageant) Run(ctx context.Context, handler func(conn io.ReadWriteCloser)) error {
-	win, err := utils.NewPageant()
+	debug := false
+	if os.Getenv("WCSA_DEBUG") == "1" {
+		debug = true
+	}
+	win, err := utils.NewPageant(debug)
 	if err != nil {
 		return err
 	}
