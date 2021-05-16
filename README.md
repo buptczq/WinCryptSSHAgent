@@ -68,7 +68,7 @@ Note: Some SSH clients using Pageant Protocol, e.g., Putty, XShell and Jetbrains
 
 Check [Yubikey with WSL tutorial](doc/wsl_tutorial.md) to start using Yubikey with SSH on WSL.
 
-### Work with Xshell:
+### Work with Xshell
 
 1. Install and run WinCryptSSHAgent
 2. Open the Properties dialog box of your session.
@@ -84,6 +84,13 @@ Unlike TLS using X.509, OpenSSH uses a special certificate format, thus we can't
 To deal with OpenSSH Certificates, this project introduces a public key override mechanism.
 
 If you want to work with OpenSSH certificates, you should put your OpenSSH Certificates in your `user profile` folder, rename them to `<Your Certificate Common Name>-cert.pub` or `<Your Certificate Serial Number>-cert.pub`.
+
+### Debug log
+
+1. Run `setx WCSA_DEBUG 1`
+2. Reboot to take effect
+3. Reproduce your problem
+4. The debug log is located in `%USERPROFILE%\WCSA_DEBUG.log`
 
 ### Contribute
 
