@@ -9,10 +9,10 @@ import (
 
 func OpenFileMapping(dwDesiredAccess uint32, bInheritHandle uintptr, mapNamePtr uintptr) (windows.Handle, error) {
 	ptr, _, err := pOpenFileMapping.Call(uintptr(dwDesiredAccess), bInheritHandle, mapNamePtr)
-	if err != nil && err.Error() == "The operation completed successfully." {
-		err = nil
+	if ptr == 0 {
+		return 0, err
 	}
-	return windows.Handle(ptr), err
+	return windows.Handle(ptr), nil
 }
 
 type memoryMapConn struct {
