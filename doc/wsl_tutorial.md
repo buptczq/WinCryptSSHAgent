@@ -57,7 +57,7 @@ Execute following commands, provide new PIN and PUK when prompted:
 1. `ssh` into your target machine, authenticate with credentials used until now.
 1. Right click on *WinCrypt SSH Agent*'s icon in tray and select *Show public keys settings* then press OK.
 
-    All known keys in SSH format will be copied. You need to locate one named **SHA key**.
+    All known keys in SSH format will be copied. You need to locate one named **SSH key**.
 
 1. Copy line with *SSH key* into `~\.ssh\authorized_keys` on target machine.
 1. Disconnect from target machine.
