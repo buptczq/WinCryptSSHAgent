@@ -53,7 +53,7 @@ Execute following commands, provide new PIN and PUK when prompted:
 
     Line like `export SSH_AUTH_SOCK=/mnt/c/Users/Jane/wincrypt-wsl.sock` will be copeid into your clipboard.
 
-1. Run your WSL console and execute command from previosu step.
+1. Run your WSL console and execute command from previous step.
 1. `ssh` into your target machine, authenticate with credentials used until now.
 1. Right click on *WinCrypt SSH Agent*'s icon in tray and select *Show public keys settings* then press OK.
 
