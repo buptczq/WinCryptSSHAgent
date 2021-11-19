@@ -124,7 +124,7 @@ func main() {
 	// context
 	ctx, cancel := context.WithCancel(context.Background())
 
-	capi.SetPINCache(*disablePINCache)
+	capi.SetDisablePINCache(*disablePINCache)
 
 	// agent
 	var ag agent.Agent

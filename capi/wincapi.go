@@ -299,7 +299,6 @@ func Sign(alg string, cert *Certificate, data []byte) (*pkcs7.PKCS7, error) {
 	return pkcs7.Parse(sign)
 }
 
-func SetPINCache(b bool) {
-	fmt.Printf("Setting PIN Cache to %v\n", b)
+func SetDisablePINCache(b bool) {
 	disablePINCache = b
 }
