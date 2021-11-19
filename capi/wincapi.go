@@ -18,14 +18,32 @@ const (
 	ALG_ECDSA_SHA256    = "1.2.840.10045.4.3.2"
 	ALG_ECDSA_SHA384    = "1.2.840.10045.4.3.3"
 	ALG_ECDSA_SHA512    = "1.2.840.10045.4.3.4"
+
+	NCRYPT_PIN_PROPERTY = "SmartCardPin"
+)
+
+const (
+	AT_KEYEXCHANGE       = uint32(1)
+	AT_SIGNATURE         = uint32(2)
+	CERT_NCRYPT_KEY_SPEC = uint32(0xFFFFFFFF)
+
+	X509_ASN_ENCODING                  = 0x1
+	PKCS_7_ASN_ENCODING                = 0x10000
+	CRYPT_ACQUIRE_CACHE_FLAG           = uint32(0x00000001)
+	CRYPT_ACQUIRE_ONLY_NCRYPT_KEY_FLAG = uint32(0x00040000)
 )
 
 var (
 	modcrypt32                            = syscall.NewLazyDLL("crypt32.dll")
+	modncrypt                             = syscall.NewLazyDLL("ncrypt.dll")
 	procCryptSignMessage                  = modcrypt32.NewProc("CryptSignMessage")
 	procCertDuplicateCertificateContext   = modcrypt32.NewProc("CertDuplicateCertificateContext")
 	procCertGetCertificateContextProperty = modcrypt32.NewProc("CertGetCertificateContextProperty")
+	procCryptAcquireCertificatePrivateKey = modcrypt32.NewProc("CryptAcquireCertificatePrivateKey")
+	procNCryptSetProperty                 = modncrypt.NewProc("NCryptSetProperty")
 )
+
+var disablePINCache = true
 
 type cryptoapiBlob struct {
 	DataSize uint32
@@ -102,6 +120,64 @@ func certGetCertificateContextProperty(context *syscall.CertContext, dwPropId ui
 	pcbDataPtr := uintptr(unsafe.Pointer(&pcbData))
 	r0, _, _ := syscall.Syscall6(procCertGetCertificateContextProperty.Addr(), 4, uintptr(unsafe.Pointer(context)), uintptr(dwPropId), pvDataPtr, pcbDataPtr, 0, 0)
 	return int(r0)
+}
+
+func nCryptSetPropertyString(hObject uintptr, pszProperty string, pbInput string, dwFlags uint32) (err error) {
+
+	pszPropertyPtr, _ := syscall.UTF16PtrFromString(pszProperty)
+
+	dataPtr := uintptr(0)
+	dataSize := uint32(0)
+	if pbInput != "" {
+		stringPtr, _ := syscall.UTF16PtrFromString(pbInput)
+		dataPtr = uintptr(unsafe.Pointer(stringPtr))
+		dataSize = uint32(len(pbInput))
+	}
+	dataSizePtr := uintptr(unsafe.Pointer(&dataSize))
+
+	r0, _, e1 := syscall.Syscall6(procNCryptSetProperty.Addr(), 5,
+		hObject,
+		uintptr(unsafe.Pointer(pszPropertyPtr)),
+		dataPtr,
+		dataSizePtr,
+		uintptr(dwFlags),
+		0,
+	)
+
+	if r0 != 0 {
+		return e1
+	}
+
+	if e1 != syscall.Errno(0) {
+		return e1
+	}
+	return nil
+}
+
+func cryptAcquireCertificatePrivateKey(certContext uintptr, flags uint32) (provContext uintptr, err error) {
+	pvParameters := uint32(0)
+	phCryptProvOrNCryptKey := uintptr(0)
+	pdwKeySpec := 0 // Can be 0, AT_KEYEXCHANGE, AT_SIGNATURE, or CERT_NCRYPT_KEY_SPEC
+	pfCallerFreeProvOrNCryptKey := false
+
+	r0, _, e1 := syscall.Syscall6(procCryptAcquireCertificatePrivateKey.Addr(), 6,
+		certContext,
+		uintptr(flags),
+		uintptr(unsafe.Pointer(&pvParameters)),
+		uintptr(unsafe.Pointer(&phCryptProvOrNCryptKey)),
+		uintptr(unsafe.Pointer(&pdwKeySpec)),
+		uintptr(unsafe.Pointer(&pfCallerFreeProvOrNCryptKey)),
+	)
+
+	if r0 == 0 {
+		return 0, fmt.Errorf("r0 was 0")
+	}
+
+	if e1 != syscall.Errno(0) {
+		return 0, e1
+	}
+
+	return phCryptProvOrNCryptKey, nil
 }
 
 type Certificate struct {
@@ -185,10 +261,18 @@ func LoadUserCerts() ([]*Certificate, error) {
 }
 
 func Sign(alg string, cert *Certificate, data []byte) (*pkcs7.PKCS7, error) {
-	const (
-		X509_ASN_ENCODING   = 0x1
-		PKCS_7_ASN_ENCODING = 0x10000
-	)
+	var nCryptHandle uintptr
+
+	if disablePINCache {
+		var err error
+		// Acquire a handle for the private key attached to this certificate
+		acquireFlags := uint32(CRYPT_ACQUIRE_CACHE_FLAG | CRYPT_ACQUIRE_ONLY_NCRYPT_KEY_FLAG)
+		nCryptHandle, err = cryptAcquireCertificatePrivateKey(cert.certContext, acquireFlags)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	algptr, err := syscall.BytePtrFromString(alg)
 	if err != nil {
 		return nil, err
@@ -203,5 +287,19 @@ func Sign(alg string, cert *Certificate, data []byte) (*pkcs7.PKCS7, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if disablePINCache && nCryptHandle != 0 {
+		// Set the PIN to NULL so we are prompted again
+		err = nCryptSetPropertyString(nCryptHandle, NCRYPT_PIN_PROPERTY, "", 0)
+		if err != nil {
+			return nil, fmt.Errorf("Could not set NCRYPT_PIN_PROPERTY: %v\n", err)
+		}
+	}
+
 	return pkcs7.Parse(sign)
+}
+
+func SetPINCache(b bool) {
+	fmt.Printf("Setting PIN Cache to %v\n", b)
+	disablePINCache = b
 }
