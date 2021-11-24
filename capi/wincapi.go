@@ -122,6 +122,7 @@ func certGetCertificateContextProperty(context *syscall.CertContext, dwPropId ui
 	return int(r0)
 }
 
+// nCryptSetPropertyString sets a string value for a named property for a CNG key storage object.
 func nCryptSetPropertyString(hObject uintptr, pszProperty string, pbInput string, dwFlags uint32) (err error) {
 
 	pszPropertyPtr, _ := syscall.UTF16PtrFromString(pszProperty)
@@ -154,6 +155,8 @@ func nCryptSetPropertyString(hObject uintptr, pszProperty string, pbInput string
 	return nil
 }
 
+// cryptAcquireCertificatePrivateKey obtains the private key for a certificateContext, returning a CNG NCRYPT_KEY_HANDLE
+// or a HCRYPTPROV depending on the flags given.
 func cryptAcquireCertificatePrivateKey(certContext uintptr, flags uint32) (provContext uintptr, err error) {
 	pvParameters := uint32(0)
 	phCryptProvOrNCryptKey := uintptr(0)
