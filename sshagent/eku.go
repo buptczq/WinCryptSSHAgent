@@ -43,3 +43,19 @@ func FilterCertificateEKU(cert *capi.Certificate) bool {
 	}
 	return true
 }
+
+func FilterCertificateSmartCardLogon(cert *capi.Certificate) bool {
+	flagClientAuth := false
+	flagSmartCardLogon := false
+	for i := range cert.ExtKeyUsage {
+		if cert.ExtKeyUsage[i] == x509.ExtKeyUsageClientAuth {
+			flagClientAuth = true
+		}
+	}
+	for i := range cert.UnknownExtKeyUsage {
+		if cert.UnknownExtKeyUsage[i].Equal(oidExtKeyUsageSmartCardLogon) {
+			flagSmartCardLogon = true
+		}
+	}
+	return flagClientAuth && flagSmartCardLogon
+}

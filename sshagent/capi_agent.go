@@ -5,12 +5,13 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"os"
+	"sync"
+
 	"github.com/buptczq/WinCryptSSHAgent/capi"
 	"github.com/buptczq/WinCryptSSHAgent/utils"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
-	"os"
-	"sync"
 )
 
 type sshKey struct {
@@ -20,8 +21,9 @@ type sshKey struct {
 }
 
 type CAPIAgent struct {
-	mu   sync.Mutex
-	keys []*sshKey
+	mu                 sync.Mutex
+	keys               []*sshKey
+	SmartCardLogonOnly bool
 }
 
 func (s *CAPIAgent) close() (err error) {
@@ -47,10 +49,14 @@ func (s *CAPIAgent) loadCerts() (err error) {
 	s.keys = make([]*sshKey, 0, len(certs))
 
 	for _, cert := range certs {
-		if !FilterCertificateEKU(cert) {
+		if s.SmartCardLogonOnly && !FilterCertificateSmartCardLogon(cert) {
+			cert.Free()
+			continue
+		} else if !FilterCertificateEKU(cert) {
 			cert.Free()
 			continue
 		}
+
 		pub, err := ssh.NewPublicKey(cert.PublicKey)
 		if err != nil {
 			cert.Free()

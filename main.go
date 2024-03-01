@@ -36,6 +36,7 @@ var applications = []app.Application{
 
 var installHVService = flag.Bool("i", false, "Install Hyper-V Guest Communication Services")
 var disableCapi = flag.Bool("disable-capi", false, "Disable Windows Crypto API")
+var smartCardLogonOnly = flag.Bool("smart-card-logon-only", false, "Advertise Smart Card Logon keys only")
 
 func installService() {
 	if !utils.IsAdmin() {
@@ -129,7 +130,7 @@ func main() {
 	} else if *disableCapi {
 		ag = sshagent.NewKeyRingAgent()
 	} else {
-		cag := new(sshagent.CAPIAgent)
+		cag := &sshagent.CAPIAgent{SmartCardLogonOnly: *smartCardLogonOnly}
 		defer cag.Close()
 		defaultAgent := sshagent.NewKeyRingAgent()
 		ag = sshagent.NewWrappedAgent(defaultAgent, []agent.Agent{agent.Agent(cag)})
