@@ -48,13 +48,27 @@ Execute following commands, provide new PIN and PUK when prompted:
 
 ***NOTE#2:*** You should also install the [YubiKey Smart Card Minidriver](https://www.yubico.com/support/download/smart-card-drivers-tools/) if you want to work with ECC algorithm certificates.
 
-### Confiure YubiKey for SSH in WLS and target machine
+### Confiure YubiKey for SSH in WSL and target machine
 
 1. Ensure that `WinCryptSSHAgent.exe` is running.
-1. Right click on *WinCrypt SSH Agent*'s icon in tray and select *Show WSL settings* then press OK.
+1. Run your WSL console and execute the command `which socat` to check if `socat` is present.
+   
+   *Some WSL Linux distros don't include `socat` by default, such as Ubuntu 20.04*
+   
+   a) If `socat` is not installed, install it before continuing. (Debian/Ubuntu example: `sudo apt install -y socat`)
+1. Right click on *WinCrypt SSH Agent*'s icon in tray and select *Show WSL settings* (or *Show WSL2 / Linux On Hyper-V Settings* if using WSL2 and/or Hyper-V) then press OK.
 
-    Line like `export SSH_AUTH_SOCK=/mnt/c/Users/Jane/wincrypt-wsl.sock` will be copeid into your clipboard.
-
+    Line like `export SSH_AUTH_SOCK=/mnt/c/Users/Jane/wincrypt-wsl.sock` will be copeid into your clipboard for WSL.
+    
+    For WSL2 / Hyper-V, lines like this will be copied into your clipboard:
+    ```
+    export SSH_AUTH_SOCK=/tmp/wincrypt-hv.sock
+    ss -lnx | grep -q $SSH_AUTH_SOCK
+    if [ $? -ne 0 ]; then
+     rm -f $SSH_AUTH_SOCK
+      (setsid nohup socat UNIX-LISTEN:$SSH_AUTH_SOCK,fork SOCKET-CONNECT:40:0:x0000x33332222x02000000x00000000 >/dev/null 2>&1)
+    fi
+    ```
 1. Run your WSL console and execute command from previous step.
 1. `ssh` into your target machine, authenticate with credentials used until now.
 1. Right click on *WinCrypt SSH Agent*'s icon in tray and select *Show public keys settings* then press OK.
