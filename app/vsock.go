@@ -202,7 +202,7 @@ func (s *VSock) onClick() {
 ss -lnx | grep -q $SSH_AUTH_SOCK
 if [ $? -ne 0 ]; then
 	rm -f $SSH_AUTH_SOCK
-  (setsid nohup socat UNIX-LISTEN:$SSH_AUTH_SOCK,fork SOCKET-CONNECT:40:0:x0000x33332222x02000000x00000000 >/dev/null 2>&1)
+  (setsid nohup socat UNIX-LISTEN:$SSH_AUTH_SOCK,fork SOCKET-CONNECT:40:0:x0000x33332222x02000000x00000000 >/dev/null 2>&1) & disown
 fi`
 	if utils.MessageBox(s.AppId().FullName()+" (OK to copy):", help, utils.MB_OKCANCEL) == utils.IDOK {
 		utils.SetClipBoard(help)
